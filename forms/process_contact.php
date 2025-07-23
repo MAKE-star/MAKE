@@ -1,30 +1,36 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST["name"];
-    $email = $_POST["email"];
-    $subject = $_POST["subject"];
-    $message = $_POST["message"];
+  $name    = strip_tags(trim($_POST["name"]));
+  $email   = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
+  $subject = strip_tags(trim($_POST["subject"]));
+  $message = trim($_POST["message"]);
 
-    $to = "adeoyemayopoelijah@gmail.com"; 
-    
+  // Validate form
+  if (empty($name) || !filter_var($email, FILTER_VALIDATE_EMAIL) || empty($subject) || empty($message)) {
+    http_response_code(400);
+    echo "Please complete the form and try again.";
+    exit;
+  }
 
-    $headers = "From: $name <$email>\r\n";
-    $headers .= "Reply-To: $email\r\n";
-    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+  // Email settings
+  $recipient = "adeoyemayopoelijah@gmail.com";
+  $email_subject = "New message from portfolio contact form: $subject";
+  $email_content = "Name: $name\n";
+  $email_content .= "Email: $email\n\n";
+  $email_content .= "Message:\n$message\n";
 
-    
-    $email_body = "Name: $name\n";
-    $email_body .= "Email: $email\n";
-    $email_body .= "Subject: $subject\n\n";
-    $email_body .= "Message:\n$message";
+  $email_headers = "From: $name <$email>";
 
-    
-    $success = mail($to, $subject, $email_body, $headers);
-
-    if ($success) {
-        echo "Message sent successfully!";
-    } else {
-        echo "Error sending the message. Please try again later.";
-    }
+  // Send the email
+  if (mail($recipient, $email_subject, $email_content, $email_headers)) {
+    http_response_code(200);
+    echo "Thank you! Your message has been sent.";
+  } else {
+    http_response_code(500);
+    echo "Oops! Something went wrong, and we couldn't send your message.";
+  }
+} else {
+  http_response_code(403);
+  echo "There was a problem with your submission, please try again.";
 }
 ?>
